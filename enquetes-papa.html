@@ -155,6 +155,7 @@
     document.getElementById('playerWrap').style.display = 'block';
 
     var saved = getSavedPosition(genreKey);
+    var hasSeeked = false;
 
     function createPlayer() {
       var vars = {
@@ -169,7 +170,6 @@
       };
       if (saved) {
         vars.index = saved.index;
-        vars.start = Math.max(0, saved.seconds - 3); // 3 Sek. zurück, für sanften Wiedereinstieg
       }
 
       player = new YT.Player('playerHost', {
@@ -183,7 +183,14 @@
             startSaveTimer();
           },
           onStateChange: function(e) {
-            if (e.data === YT.PlayerState.PLAYING) setPlayPauseIcon(true);
+            if (e.data === YT.PlayerState.PLAYING) {
+              setPlayPauseIcon(true);
+              if (saved && !hasSeeked) {
+                hasSeeked = true;
+                var target = Math.max(0, saved.seconds - 3);
+                player.seekTo(target, true);
+              }
+            }
             if (e.data === YT.PlayerState.PAUSED) { setPlayPauseIcon(false); saveCurrentPosition(); }
             if (e.data === YT.PlayerState.ENDED) player.playVideo();
           },
