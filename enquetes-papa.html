@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Enquêtes criminelles</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #14171c; font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; }
+
+  #start {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 50% 35%, #2b3140 0%, #14171c 70%);
+    text-align: center;
+    padding: 5vw;
+  }
+
+  .icon {
+    font-size: 22vw;
+    line-height: 1;
+    margin-bottom: 3vh;
+    filter: drop-shadow(0 0 30px rgba(255,255,255,0.15));
+  }
+
+  h1 {
+    color: #f4f1e8;
+    font-size: 7vw;
+    font-weight: 700;
+    margin-bottom: 6vh;
+    letter-spacing: 0.02em;
+  }
+
+  #startBtn {
+    background: #c94f4f;
+    color: #ffffff;
+    border: none;
+    border-radius: 40px;
+    padding: 5vh 8vw;
+    font-size: 6.5vw;
+    font-weight: 700;
+    box-shadow: 0 10px 0 #8f3535, 0 15px 30px rgba(0,0,0,0.5);
+    cursor: pointer;
+    line-height: 1.3;
+  }
+  #startBtn:active {
+    transform: translateY(8px);
+    box-shadow: 0 2px 0 #8f3535, 0 8px 20px rgba(0,0,0,0.5);
+  }
+
+  #playerWrap {
+    position: fixed; inset: 0;
+    background: #000;
+    display: none;
+  }
+  #playerWrap iframe {
+    width: 100%; height: 100%;
+    border: 0;
+    display: block;
+  }
+
+  #homeBtn {
+    position: fixed;
+    bottom: 3vh; right: 3vh;
+    width: 16vw; height: 16vw;
+    max-width: 90px; max-height: 90px;
+    background: rgba(30,30,30,0.55);
+    border: 3px solid rgba(255,255,255,0.6);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8vw;
+    color: #fff;
+    z-index: 10;
+  }
+
+  #errorMsg {
+    display: none;
+    position: fixed; inset: 0;
+    background: #14171c;
+    color: #f4f1e8;
+    align-items: center; justify-content: center;
+    text-align: center;
+    font-size: 5vw;
+    padding: 10vw;
+    z-index: 20;
+  }
+</style>
+</head>
+<body>
+
+  <div id="start">
+    <div class="icon">🔍</div>
+    <h1>Enquêtes<br>criminelles</h1>
+    <button id="startBtn">▶&nbsp;&nbsp;Regarder</button>
+  </div>
+
+  <div id="playerWrap">
+    <div id="homeBtn">🏠</div>
+  </div>
+
+  <div id="errorMsg">
+    Impossible de charger la vidéo ici.<br><br>Réessayez depuis le lien hébergé (Netlify).
+  </div>
+
+<script>
+  // Playlist "Enquêtes criminelles France" (Canal Crime) — 260+ épisodes complets
+  var PLAYLIST_ID = "PLo2KopGHIN3qWaYOk1H3URsIYYyqDaFD-";
+
+  function startShow() {
+    document.getElementById('start').style.display = 'none';
+    var wrap = document.getElementById('playerWrap');
+
+    var iframe = document.createElement('iframe');
+    iframe.src = "https://www.youtube.com/embed/videoseries?list=" + PLAYLIST_ID +
+                 "&autoplay=1&playsinline=1&rel=0&modestbranding=1&loop=1";
+    iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+    iframe.setAttribute('allowfullscreen', '');
+
+    // Falls der iframe aus irgendeinem Grund blockiert wird (z.B. Vorschau-Sandbox),
+    // zeigen wir nach kurzer Zeit eine Fehlermeldung statt eines leeren Bildschirms.
+    var fallbackTimer = setTimeout(function() {
+      document.getElementById('errorMsg').style.display = 'flex';
+    }, 4000);
+    iframe.onload = function() {
+      clearTimeout(fallbackTimer);
+    };
+
+    wrap.insertBefore(iframe, wrap.firstChild);
+    wrap.style.display = 'block';
+  }
+
+  document.getElementById('startBtn').addEventListener('click', startShow);
+
+  document.getElementById('homeBtn').addEventListener('click', function() {
+    var wrap = document.getElementById('playerWrap');
+    var frame = wrap.querySelector('iframe');
+    if (frame) frame.remove();
+    wrap.style.display = 'none';
+    document.getElementById('errorMsg').style.display = 'none';
+    document.getElementById('start').style.display = 'flex';
+  });
+</script>
+
+</body>
+</html>
