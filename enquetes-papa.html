@@ -13,53 +13,59 @@
     display: flex; flex-direction: column;
     align-items: stretch; justify-content: center;
     background: #14171c;
-    padding: 3vh 4vw;
-    gap: 3vh;
+    padding: 2.5vh 4vw;
+    gap: 2.2vh;
   }
 
   .genreBtn {
     flex: 1;
-    max-height: 30vh;
+    max-height: 24vh;
     display: flex; flex-direction: row;
     align-items: center; justify-content: flex-start;
     gap: 4vw;
     border: none;
-    border-radius: 28px;
+    border-radius: 26px;
     padding: 0 6vw;
     color: #ffffff;
-    font-size: 6.2vw;
+    font-size: 5.6vw;
     font-weight: 700;
     text-align: left;
-    line-height: 1.15;
-    box-shadow: 0 8px 0 rgba(0,0,0,0.35), 0 14px 24px rgba(0,0,0,0.4);
+    line-height: 1.1;
+    box-shadow: 0 7px 0 rgba(0,0,0,0.35), 0 12px 20px rgba(0,0,0,0.4);
   }
-  .genreBtn:active { transform: translateY(6px); box-shadow: 0 2px 0 rgba(0,0,0,0.35), 0 6px 14px rgba(0,0,0,0.4); }
-  .genreBtn .emoji { font-size: 15vw; line-height: 1; flex-shrink: 0; }
+  .genreBtn:active { transform: translateY(5px); box-shadow: 0 2px 0 rgba(0,0,0,0.35), 0 5px 12px rgba(0,0,0,0.4); }
+  .genreBtn .emoji { font-size: 13vw; line-height: 1; flex-shrink: 0; }
 
-  #btnCrime  { background: #c94f4f; }
-  #btnVoyage { background: #2f8f6e; }
-  #btnScience{ background: #3d6fc9; }
+  #btnCrime   { background: #c94f4f; }
+  #btnVoyage  { background: #2f8f6e; }
+  #btnScience { background: #3d6fc9; }
+  #btnHistory { background: #b8863f; }
 
   #playerWrap {
     position: fixed; inset: 0;
     background: #000;
     display: none;
   }
-  #playerWrap iframe { width: 100%; height: 100%; border: 0; display: block; }
+  #playerHost { width: 100%; height: 100%; }
 
-  #homeBtn {
+  .ctrlBtn {
     position: fixed;
-    bottom: 3vh; right: 3vh;
-    width: 16vw; height: 16vw;
-    max-width: 90px; max-height: 90px;
-    background: rgba(30,30,30,0.55);
-    border: 3px solid rgba(255,255,255,0.6);
+    bottom: 3vh;
+    width: 20vw; height: 20vw;
+    max-width: 110px; max-height: 110px;
+    background: rgba(20,20,20,0.6);
+    border: 3px solid rgba(255,255,255,0.65);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 8vw;
+    font-size: 9vw;
     color: #fff;
     z-index: 10;
   }
+  .ctrlBtn:active { background: rgba(60,60,60,0.75); }
+
+  #homeBtn   { top: 3vh; right: 3vh; bottom: auto; width: 13vw; height: 13vw; max-width: 70px; max-height: 70px; font-size: 6vw; }
+  #playPauseBtn { left: 4vw; }
+  #nextBtn      { right: 4vw; }
 
   #errorMsg {
     display: none;
@@ -89,51 +95,114 @@
       <span class="emoji">🔬</span>
       <span>Documentaires<br>scientifiques</span>
     </button>
+    <button class="genreBtn" id="btnHistory">
+      <span class="emoji">🏛️</span>
+      <span>Histoire</span>
+    </button>
   </div>
 
   <div id="playerWrap">
-    <div id="homeBtn">🏠</div>
+    <div id="playerHost"></div>
+    <div class="ctrlBtn" id="homeBtn">🏠</div>
+    <div class="ctrlBtn" id="playPauseBtn">⏸️</div>
+    <div class="ctrlBtn" id="nextBtn">⏭️</div>
   </div>
 
   <div id="errorMsg">
     Impossible de charger la vidéo ici.<br><br>Réessayez depuis le lien hébergé.
   </div>
 
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
+  // Eigene, kuratierte Playlists von Naxela (alle "Nicht gelistet")
   var PLAYLISTS = {
-    crime:   "PLo2KopGHIN3qWaYOk1H3URsIYYyqDaFD-",   // Enquêtes criminelles France (Canal Crime)
-    voyage:  "PLwzV0PjDdUNDcKkGDNrd13gz1jbdqFwe4",    // Voyages autour du monde
-    science: "PLdf9pHBWxlcOhQCKAJO1H0G-lmpEiPTOu"     // L'Univers et le Cosmos (Documentaires scientifiques)
+    crime:   "PLZvoovvay0GY",   // Enquêtes criminelles
+    voyage:  "PLQLlV-H9DVvE",   // voyages
+    science: "PLSd09qepl5So",   // scientifique
+    history: "PLFYmoi6pZ-7E"    // histoire
   };
+
+  var ytReady = false;
+  var player = null;
+
+  function onYouTubeIframeAPIReady() {
+    ytReady = true;
+  }
 
   function startShow(playlistId) {
     document.getElementById('start').style.display = 'none';
-    var wrap = document.getElementById('playerWrap');
+    document.getElementById('playerWrap').style.display = 'block';
 
-    var iframe = document.createElement('iframe');
-    iframe.src = "https://www.youtube.com/embed/videoseries?list=" + playlistId +
-                 "&autoplay=1&playsinline=1&rel=0&modestbranding=1&loop=1";
-    iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
-    iframe.setAttribute('allowfullscreen', '');
+    function createPlayer() {
+      player = new YT.Player('playerHost', {
+        width: '100%',
+        height: '100%',
+        playerVars: {
+          listType: 'playlist',
+          list: playlistId,
+          autoplay: 1,
+          loop: 1,
+          playsinline: 1,
+          controls: 1,
+          rel: 0,
+          modestbranding: 1
+        },
+        events: {
+          onReady: function(e) {
+            e.target.playVideo();
+            setPlayPauseIcon(true);
+          },
+          onStateChange: function(e) {
+            if (e.data === YT.PlayerState.PLAYING) setPlayPauseIcon(true);
+            if (e.data === YT.PlayerState.PAUSED) setPlayPauseIcon(false);
+            if (e.data === YT.PlayerState.ENDED) player.playVideo();
+          },
+          onError: function() {
+            document.getElementById('errorMsg').style.display = 'flex';
+          }
+        }
+      });
+    }
 
-    var fallbackTimer = setTimeout(function() {
-      document.getElementById('errorMsg').style.display = 'flex';
-    }, 4000);
-    iframe.onload = function() { clearTimeout(fallbackTimer); };
+    if (ytReady) {
+      createPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = function() {
+        ytReady = true;
+        createPlayer();
+      };
+    }
+  }
 
-    wrap.insertBefore(iframe, wrap.firstChild);
-    wrap.style.display = 'block';
+  function setPlayPauseIcon(isPlaying) {
+    document.getElementById('playPauseBtn').textContent = isPlaying ? '⏸️' : '▶️';
   }
 
   document.getElementById('btnCrime').addEventListener('click', function() { startShow(PLAYLISTS.crime); });
   document.getElementById('btnVoyage').addEventListener('click', function() { startShow(PLAYLISTS.voyage); });
   document.getElementById('btnScience').addEventListener('click', function() { startShow(PLAYLISTS.science); });
+  document.getElementById('btnHistory').addEventListener('click', function() { startShow(PLAYLISTS.history); });
+
+  document.getElementById('playPauseBtn').addEventListener('click', function() {
+    if (!player) return;
+    var state = player.getPlayerState();
+    if (state === YT.PlayerState.PLAYING) {
+      player.pauseVideo();
+    } else {
+      player.playVideo();
+    }
+  });
+
+  document.getElementById('nextBtn').addEventListener('click', function() {
+    if (!player) return;
+    player.nextVideo();
+  });
 
   document.getElementById('homeBtn').addEventListener('click', function() {
-    var wrap = document.getElementById('playerWrap');
-    var frame = wrap.querySelector('iframe');
-    if (frame) frame.remove();
-    wrap.style.display = 'none';
+    if (player && player.destroy) player.destroy();
+    player = null;
+    document.getElementById('playerHost').innerHTML = '';
+    document.getElementById('playerWrap').style.display = 'none';
     document.getElementById('errorMsg').style.display = 'none';
     document.getElementById('start').style.display = 'flex';
   });
