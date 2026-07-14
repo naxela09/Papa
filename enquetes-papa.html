@@ -124,37 +124,67 @@
 
   var ytReady = false;
   var player = null;
+  var currentGenreKey = null;
+  var saveTimer = null;
 
   function onYouTubeIframeAPIReady() {
     ytReady = true;
   }
 
-  function startShow(playlistId) {
+  // --- Fortschritt speichern/lesen (bleibt lokal auf dem iPad) ---
+  function loadProgress() {
+    try {
+      return JSON.parse(localStorage.getItem('docApp_progress') || '{}');
+    } catch (e) {
+      return {};
+    }
+  }
+  function saveProgress(genreKey, index, seconds) {
+    var all = loadProgress();
+    all[genreKey] = { index: index, seconds: seconds };
+    try { localStorage.setItem('docApp_progress', JSON.stringify(all)); } catch (e) {}
+  }
+  function getSavedPosition(genreKey) {
+    var all = loadProgress();
+    return all[genreKey] || null;
+  }
+
+  function startShow(genreKey, playlistId) {
+    currentGenreKey = genreKey;
     document.getElementById('start').style.display = 'none';
     document.getElementById('playerWrap').style.display = 'block';
 
+    var saved = getSavedPosition(genreKey);
+
     function createPlayer() {
+      var vars = {
+        listType: 'playlist',
+        list: playlistId,
+        autoplay: 1,
+        loop: 1,
+        playsinline: 1,
+        controls: 1,
+        rel: 0,
+        modestbranding: 1
+      };
+      if (saved) {
+        vars.index = saved.index;
+        vars.start = Math.max(0, saved.seconds - 3); // 3 Sek. zurück, für sanften Wiedereinstieg
+      }
+
       player = new YT.Player('playerHost', {
         width: '100%',
         height: '100%',
-        playerVars: {
-          listType: 'playlist',
-          list: playlistId,
-          autoplay: 1,
-          loop: 1,
-          playsinline: 1,
-          controls: 1,
-          rel: 0,
-          modestbranding: 1
-        },
+        playerVars: vars,
         events: {
           onReady: function(e) {
             e.target.playVideo();
             setPlayPauseIcon(true);
+            startSaveTimer();
           },
           onStateChange: function(e) {
             if (e.data === YT.PlayerState.PLAYING) setPlayPauseIcon(true);
-            if (e.data === YT.PlayerState.PAUSED) setPlayPauseIcon(false);
+            if (e.data === YT.PlayerState.PAUSED) { setPlayPauseIcon(false); saveCurrentPosition(); }
             if (e.data === YT.PlayerState.ENDED) player.playVideo();
           },
           onError: function() {
@@ -174,14 +204,31 @@
     }
   }
 
+  function saveCurrentPosition() {
+    if (!player || !currentGenreKey || !player.getCurrentTime) return;
+    try {
+      var idx = player.getPlaylistIndex ? player.getPlaylistIndex() : 0;
+      var secs = player.getCurrentTime();
+      saveProgress(currentGenreKey, idx, secs);
+    } catch (e) {}
+  }
+
+  function startSaveTimer() {
+    stopSaveTimer();
+    saveTimer = setInterval(saveCurrentPosition, 5000); // alle 5 Sekunden merken
+  }
+  function stopSaveTimer() {
+    if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
+  }
+
   function setPlayPauseIcon(isPlaying) {
     document.getElementById('playPauseBtn').textContent = isPlaying ? '⏸️' : '▶️';
   }
 
-  document.getElementById('btnCrime').addEventListener('click', function() { startShow(PLAYLISTS.crime); });
-  document.getElementById('btnVoyage').addEventListener('click', function() { startShow(PLAYLISTS.voyage); });
-  document.getElementById('btnScience').addEventListener('click', function() { startShow(PLAYLISTS.science); });
-  document.getElementById('btnHistory').addEventListener('click', function() { startShow(PLAYLISTS.history); });
+  document.getElementById('btnCrime').addEventListener('click', function() { startShow('crime', PLAYLISTS.crime); });
+  document.getElementById('btnVoyage').addEventListener('click', function() { startShow('voyage', PLAYLISTS.voyage); });
+  document.getElementById('btnScience').addEventListener('click', function() { startShow('science', PLAYLISTS.science); });
+  document.getElementById('btnHistory').addEventListener('click', function() { startShow('history', PLAYLISTS.history); });
 
   document.getElementById('playPauseBtn').addEventListener('click', function() {
     if (!player) return;
@@ -196,9 +243,12 @@
   document.getElementById('nextBtn').addEventListener('click', function() {
     if (!player) return;
     player.nextVideo();
+    saveCurrentPosition();
   });
 
   document.getElementById('homeBtn').addEventListener('click', function() {
+    saveCurrentPosition();
+    stopSaveTimer();
     if (player && player.destroy) player.destroy();
     player = null;
     document.getElementById('playerHost').innerHTML = '';
