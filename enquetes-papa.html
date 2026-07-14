@@ -8,64 +8,104 @@
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #14171c; font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; }
 
-  #start {
-    position: fixed; inset: 0;
-    display: flex; flex-direction: column;
+  .screen { position: fixed; inset: 0; display: none; }
+  .screen.active { display: flex; }
+
+  /* --- Écran 1 : genres --- */
+  #screenGenres {
+    flex-direction: column;
     align-items: stretch; justify-content: center;
     background: #14171c;
-    padding: 2.5vh 4vw;
-    gap: 2.2vh;
+    padding: 3vh 5vw;
+    gap: 3vh;
   }
-
   .genreBtn {
     flex: 1;
-    max-height: 24vh;
+    max-height: 30vh;
     display: flex; flex-direction: row;
     align-items: center; justify-content: flex-start;
-    gap: 4vw;
+    gap: 5vw;
     border: none;
-    border-radius: 26px;
-    padding: 0 6vw;
+    border-radius: 28px;
+    padding: 0 7vw;
     color: #ffffff;
-    font-size: 5.6vw;
+    font-size: 6.5vw;
     font-weight: 700;
     text-align: left;
-    line-height: 1.1;
-    box-shadow: 0 7px 0 rgba(0,0,0,0.35), 0 12px 20px rgba(0,0,0,0.4);
+    line-height: 1.15;
+    box-shadow: 0 8px 0 rgba(0,0,0,0.35), 0 14px 24px rgba(0,0,0,0.4);
   }
-  .genreBtn:active { transform: translateY(5px); box-shadow: 0 2px 0 rgba(0,0,0,0.35), 0 5px 12px rgba(0,0,0,0.4); }
-  .genreBtn .emoji { font-size: 13vw; line-height: 1; flex-shrink: 0; }
-
+  .genreBtn:active { transform: translateY(6px); box-shadow: 0 2px 0 rgba(0,0,0,0.35), 0 6px 14px rgba(0,0,0,0.4); }
+  .genreBtn .emoji { font-size: 16vw; line-height: 1; flex-shrink: 0; }
   #btnCrime   { background: #c94f4f; }
-  #btnVoyage  { background: #2f8f6e; }
-  #btnScience { background: #3d6fc9; }
   #btnHistory { background: #b8863f; }
+  #btnTennis  { background: #4a9d4f; }
 
-  #playerWrap {
-    position: fixed; inset: 0;
-    background: #000;
-    display: none;
+  /* --- Écran 2 : grille de vidéos --- */
+  #screenGrid {
+    flex-direction: column;
+    background: #14171c;
+    padding: 9vh 3vw 3vh 3vw;
   }
+  #videoGrid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3vw;
+    overflow: hidden;
+  }
+  .videoTile {
+    border: none;
+    border-radius: 22px;
+    overflow: hidden;
+    padding: 0;
+    background: #222;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.35), 0 10px 18px rgba(0,0,0,0.4);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .videoTile:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.35), 0 4px 10px rgba(0,0,0,0.4); }
+  .videoTile .thumbWrap { position: relative; flex: 1; overflow: hidden; }
+  .videoTile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .videoTile .playOverlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10vw;
+    color: rgba(255,255,255,0.85);
+    text-shadow: 0 3px 10px rgba(0,0,0,0.6);
+  }
+  .videoTile .caption {
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    font-size: 4vw;
+    font-weight: 700;
+    line-height: 1.25;
+    padding: 2vw 3vw;
+    text-align: center;
+  }
+
+  /* --- Écran 3 : lecteur --- */
+  #screenPlayer { background: #000; }
   #playerHost { width: 100%; height: 100%; }
 
-  .ctrlBtn {
+  /* --- Boutons communs --- */
+  .roundBtn {
     position: fixed;
-    bottom: 3vh;
-    width: 20vw; height: 20vw;
-    max-width: 110px; max-height: 110px;
     background: rgba(20,20,20,0.6);
     border: 3px solid rgba(255,255,255,0.65);
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 9vw;
     color: #fff;
     z-index: 10;
   }
-  .ctrlBtn:active { background: rgba(60,60,60,0.75); }
+  .roundBtn:active { background: rgba(60,60,60,0.75); }
 
-  #homeBtn   { top: 3vh; right: 3vh; bottom: auto; width: 13vw; height: 13vw; max-width: 70px; max-height: 70px; font-size: 6vw; }
+  .homeBtnSmall { top: 3vh; right: 3vh; width: 13vw; height: 13vw; max-width: 70px; max-height: 70px; font-size: 6vw; }
+
+  .bigCtrlBtn { bottom: 3vh; width: 20vw; height: 20vw; max-width: 110px; max-height: 110px; font-size: 9vw; }
   #playPauseBtn { left: 4vw; }
-  #nextBtn      { right: 4vw; }
+  #backToGridBtn { right: 4vw; }
 
   #errorMsg {
     display: none;
@@ -82,30 +122,34 @@
 </head>
 <body>
 
-  <div id="start">
-    <button class="genreBtn" id="btnCrime">
+  <!-- Écran 1 : genres -->
+  <div class="screen active" id="screenGenres">
+    <button class="genreBtn" id="btnCrime" data-genre="crime">
       <span class="emoji">🔍</span>
       <span>Enquêtes<br>criminelles</span>
     </button>
-    <button class="genreBtn" id="btnVoyage">
-      <span class="emoji">✈️</span>
-      <span>Voyages &amp;<br>découvertes</span>
-    </button>
-    <button class="genreBtn" id="btnScience">
-      <span class="emoji">🔬</span>
-      <span>Documentaires<br>scientifiques</span>
-    </button>
-    <button class="genreBtn" id="btnHistory">
+    <button class="genreBtn" id="btnHistory" data-genre="history">
       <span class="emoji">🏛️</span>
       <span>Histoire</span>
     </button>
+    <button class="genreBtn" id="btnTennis" data-genre="tennis">
+      <span class="emoji">🎾</span>
+      <span>Tennis</span>
+    </button>
   </div>
 
-  <div id="playerWrap">
+  <!-- Écran 2 : grille de vidéos -->
+  <div class="screen" id="screenGrid">
+    <div class="roundBtn homeBtnSmall" id="homeFromGrid">🏠</div>
+    <div id="videoGrid"></div>
+  </div>
+
+  <!-- Écran 3 : lecteur -->
+  <div class="screen" id="screenPlayer">
     <div id="playerHost"></div>
-    <div class="ctrlBtn" id="homeBtn">🏠</div>
-    <div class="ctrlBtn" id="playPauseBtn">⏸️</div>
-    <div class="ctrlBtn" id="nextBtn">⏭️</div>
+    <div class="roundBtn homeBtnSmall" id="homeFromPlayer">🏠</div>
+    <div class="roundBtn bigCtrlBtn" id="playPauseBtn">⏸️</div>
+    <div class="roundBtn bigCtrlBtn" id="backToGridBtn">🔙</div>
   </div>
 
   <div id="errorMsg">
@@ -114,89 +158,97 @@
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-  // Eigene, kuratierte Playlists von Naxela (alle "Nicht gelistet")
-  var PLAYLISTS = {
-    crime:   "PLZvoovvay0GY",   // Enquêtes criminelles
-    voyage:  "PLQLlV-H9DVvE",   // voyages
-    science: "PLSd09qepl5So",   // scientifique
-    history: "PLFYmoi6pZ-7E"    // histoire
+  // Vidéos sélectionnées à la main par Naxela pour chaque genre
+  var GENRES = {
+    crime: {
+      videos: [
+        { id: "9LsV49yfx90", title: "Affaire Gisèle Pelicot" },
+        { id: "gsaFPJj_PHU", title: "Affaire Dany Leprince" },
+        { id: "Pd8CkjK5bkk", title: "Affaire Anaïs Guillaume" },
+        { id: "Z41sg6dFvcQ", title: "Henri-Jean Jacomet" },
+        { id: "QRXpI_Ehs28", title: "Affaire Natacha Mougel" }
+      ]
+    },
+    history: {
+      videos: [
+        { id: "r_NwGvla7eQ", title: "Tchernobyl" },
+        { id: "9c_giLFxRno", title: "Les femmes dans la Révolution française" },
+        { id: "kQ98ded7_0g", title: "La chute des rois mayas" },
+        { id: "yRnNXc0CO5U", title: "La fondation de Rome" }
+      ]
+    },
+    tennis: {
+      videos: [
+        { id: "ckbX699wngs", title: "Alcaraz - Sinner (Finale RG 2025)" },
+        { id: "Zx0pej1b6ao", title: "Djokovic - Zverev (Quart RG 2025)" },
+        { id: "9g3WKx6ZV7w", title: "Gauff - Boisson (Demi RG 2025)" },
+        { id: "1evSNBJAB2o", title: "Halep - Stephens (Finale 2018)" },
+        { id: "EbXdeIPFc5Y", title: "Safin - Agassi (1998)" },
+        { id: "gWPRMia_76c", title: "Swiatek - Svitolina (Quart RG 2025)" }
+      ]
+    }
   };
 
   var ytReady = false;
   var player = null;
-  var currentGenreKey = null;
-  var saveTimer = null;
+  var currentGenre = null;
 
-  function onYouTubeIframeAPIReady() {
-    ytReady = true;
+  function onYouTubeIframeAPIReady() { ytReady = true; }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
   }
 
-  // --- Fortschritt speichern/lesen (bleibt lokal auf dem iPad) ---
-  function loadProgress() {
-    try {
-      return JSON.parse(localStorage.getItem('docApp_progress') || '{}');
-    } catch (e) {
-      return {};
-    }
-  }
-  function saveProgress(genreKey, index, seconds) {
-    var all = loadProgress();
-    all[genreKey] = { index: index, seconds: seconds };
-    try { localStorage.setItem('docApp_progress', JSON.stringify(all)); } catch (e) {}
-  }
-  function getSavedPosition(genreKey) {
-    var all = loadProgress();
-    return all[genreKey] || null;
+  function openGenre(genreKey) {
+    currentGenre = genreKey;
+    var grid = document.getElementById('videoGrid');
+    grid.innerHTML = '';
+    var videos = GENRES[genreKey].videos;
+
+    var rows = Math.ceil(videos.length / 2);
+    grid.style.gridTemplateRows = 'repeat(' + rows + ', 1fr)';
+
+    videos.forEach(function(video) {
+      var tile = document.createElement('button');
+      tile.className = 'videoTile';
+      tile.innerHTML =
+        '<div class="thumbWrap">' +
+          '<img src="https://img.youtube.com/vi/' + video.id + '/hqdefault.jpg" alt="">' +
+          '<div class="playOverlay">▶️</div>' +
+        '</div>' +
+        '<div class="caption">' + video.title + '</div>';
+      tile.addEventListener('click', function() { openPlayer(video.id); });
+      grid.appendChild(tile);
+    });
+
+    showScreen('screenGrid');
   }
 
-  function startShow(genreKey, playlistId) {
-    currentGenreKey = genreKey;
-    document.getElementById('start').style.display = 'none';
-    document.getElementById('playerWrap').style.display = 'block';
-
-    var saved = getSavedPosition(genreKey);
-    var hasSeeked = false;
+  function openPlayer(videoId) {
+    showScreen('screenPlayer');
 
     function createPlayer() {
-      var vars = {
-        listType: 'playlist',
-        list: playlistId,
-        autoplay: 1,
-        loop: 1,
-        playsinline: 1,
-        controls: 1,
-        rel: 0,
-        modestbranding: 1
-      };
-      if (saved) {
-        vars.index = saved.index;
-      }
-
       player = new YT.Player('playerHost', {
         width: '100%',
         height: '100%',
-        playerVars: vars,
+        playerVars: {
+          autoplay: 1,
+          playsinline: 1,
+          controls: 1,
+          rel: 0,
+          modestbranding: 1,
+          list: videoId,
+          listType: 'playlist',
+          loop: 1
+        },
         events: {
-          onReady: function(e) {
-            e.target.playVideo();
-            setPlayPauseIcon(true);
-            startSaveTimer();
-          },
+          onReady: function(e) { e.target.playVideo(); setPlayPauseIcon(true); },
           onStateChange: function(e) {
-            if (e.data === YT.PlayerState.PLAYING) {
-              setPlayPauseIcon(true);
-              if (saved && !hasSeeked) {
-                hasSeeked = true;
-                var target = Math.max(0, saved.seconds - 3);
-                player.seekTo(target, true);
-              }
-            }
-            if (e.data === YT.PlayerState.PAUSED) { setPlayPauseIcon(false); saveCurrentPosition(); }
-            if (e.data === YT.PlayerState.ENDED) player.playVideo();
+            if (e.data === YT.PlayerState.PLAYING) setPlayPauseIcon(true);
+            if (e.data === YT.PlayerState.PAUSED) setPlayPauseIcon(false);
           },
-          onError: function() {
-            document.getElementById('errorMsg').style.display = 'flex';
-          }
+          onError: function() { document.getElementById('errorMsg').style.display = 'flex'; }
         }
       });
     }
@@ -204,38 +256,39 @@
     if (ytReady) {
       createPlayer();
     } else {
-      window.onYouTubeIframeAPIReady = function() {
-        ytReady = true;
-        createPlayer();
-      };
+      window.onYouTubeIframeAPIReady = function() { ytReady = true; createPlayer(); };
     }
-  }
-
-  function saveCurrentPosition() {
-    if (!player || !currentGenreKey || !player.getCurrentTime) return;
-    try {
-      var idx = player.getPlaylistIndex ? player.getPlaylistIndex() : 0;
-      var secs = player.getCurrentTime();
-      saveProgress(currentGenreKey, idx, secs);
-    } catch (e) {}
-  }
-
-  function startSaveTimer() {
-    stopSaveTimer();
-    saveTimer = setInterval(saveCurrentPosition, 5000); // alle 5 Sekunden merken
-  }
-  function stopSaveTimer() {
-    if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
   }
 
   function setPlayPauseIcon(isPlaying) {
     document.getElementById('playPauseBtn').textContent = isPlaying ? '⏸️' : '▶️';
   }
 
-  document.getElementById('btnCrime').addEventListener('click', function() { startShow('crime', PLAYLISTS.crime); });
-  document.getElementById('btnVoyage').addEventListener('click', function() { startShow('voyage', PLAYLISTS.voyage); });
-  document.getElementById('btnScience').addEventListener('click', function() { startShow('science', PLAYLISTS.science); });
-  document.getElementById('btnHistory').addEventListener('click', function() { startShow('history', PLAYLISTS.history); });
+  function destroyPlayer() {
+    if (player && player.destroy) player.destroy();
+    player = null;
+    document.getElementById('playerHost').innerHTML = '';
+    document.getElementById('errorMsg').style.display = 'none';
+  }
+
+  // --- Navigation ---
+  document.querySelectorAll('.genreBtn').forEach(function(btn) {
+    btn.addEventListener('click', function() { openGenre(btn.getAttribute('data-genre')); });
+  });
+
+  document.getElementById('homeFromGrid').addEventListener('click', function() {
+    showScreen('screenGenres');
+  });
+
+  document.getElementById('homeFromPlayer').addEventListener('click', function() {
+    destroyPlayer();
+    showScreen('screenGenres');
+  });
+
+  document.getElementById('backToGridBtn').addEventListener('click', function() {
+    destroyPlayer();
+    openGenre(currentGenre);
+  });
 
   document.getElementById('playPauseBtn').addEventListener('click', function() {
     if (!player) return;
@@ -245,23 +298,6 @@
     } else {
       player.playVideo();
     }
-  });
-
-  document.getElementById('nextBtn').addEventListener('click', function() {
-    if (!player) return;
-    player.nextVideo();
-    saveCurrentPosition();
-  });
-
-  document.getElementById('homeBtn').addEventListener('click', function() {
-    saveCurrentPosition();
-    stopSaveTimer();
-    if (player && player.destroy) player.destroy();
-    player = null;
-    document.getElementById('playerHost').innerHTML = '';
-    document.getElementById('playerWrap').style.display = 'none';
-    document.getElementById('errorMsg').style.display = 'none';
-    document.getElementById('start').style.display = 'flex';
   });
 </script>
 
