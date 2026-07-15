@@ -114,8 +114,9 @@
 
   .homeBtnSmall { top: 3vh; right: 3vh; width: 13vw; height: 13vw; max-width: 70px; max-height: 70px; font-size: 6vw; }
 
-  .bigCtrlBtn { bottom: 3vh; width: 20vw; height: 20vw; max-width: 110px; max-height: 110px; font-size: 9vw; }
-  #playPauseBtn { left: 4vw; }
+  .bigCtrlBtn { bottom: 3vh; width: 10vw; height: 10vw; max-width: 55px; max-height: 55px; font-size: 4.5vw; }
+  #playPauseBtn { left: 4vw; background: rgba(217, 178, 32, 0.9); }
+  #rewindBtn { right: 4vw; background: rgba(61, 111, 201, 0.85); }
   #backToGridBtn { right: 4vw; }
 
   #errorMsg {
@@ -161,6 +162,7 @@
     <div id="tapShield"></div>
     <div class="roundBtn homeBtnSmall" id="homeFromPlayer">🏠</div>
     <div class="roundBtn bigCtrlBtn" id="playPauseBtn">⏸️</div>
+    <div class="roundBtn bigCtrlBtn" id="rewindBtn">⏪</div>
   </div>
 
   <div id="errorMsg">
@@ -347,6 +349,12 @@
     } else {
       player.playVideo();
     }
+  });
+
+  document.getElementById('rewindBtn').addEventListener('click', function() {
+    if (!player || !player.getCurrentTime) return;
+    var newTime = Math.max(0, player.getCurrentTime() - 10);
+    player.seekTo(newTime, true);
   });
 </script>
 
