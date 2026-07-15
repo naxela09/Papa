@@ -88,6 +88,11 @@
   /* --- Écran 3 : lecteur --- */
   #screenPlayer { background: #000; }
   #playerHost { width: 100%; height: 100%; }
+  #tapShield {
+    position: fixed; inset: 0;
+    background: transparent;
+    z-index: 5;
+  }
 
   /* --- Boutons communs --- */
   .roundBtn {
@@ -147,9 +152,9 @@
   <!-- Écran 3 : lecteur -->
   <div class="screen" id="screenPlayer">
     <div id="playerHost"></div>
+    <div id="tapShield"></div>
     <div class="roundBtn homeBtnSmall" id="homeFromPlayer">🏠</div>
     <div class="roundBtn bigCtrlBtn" id="playPauseBtn">⏸️</div>
-    <div class="roundBtn bigCtrlBtn" id="backToGridBtn">🔙</div>
   </div>
 
   <div id="errorMsg">
@@ -195,6 +200,21 @@
   var ytReady = false;
   var player = null;
   var currentGenre = null;
+  var currentVideoId = null;
+  var saveInterval = null;
+
+  function getSavedPosition(videoId) {
+    try {
+      var val = localStorage.getItem('pos_' + videoId);
+      return val ? parseFloat(val) : 0;
+    } catch (e) { return 0; }
+  }
+
+  function savePosition(videoId, seconds) {
+    try {
+      localStorage.setItem('pos_' + videoId, String(seconds));
+    } catch (e) {}
+  }
 
   function onYouTubeIframeAPIReady() { ytReady = true; }
 
@@ -231,6 +251,7 @@
   }
 
   function openPlayer(videoId) {
+    currentVideoId = videoId;
     showScreen('screenPlayer');
 
     function createPlayer() {
@@ -247,10 +268,29 @@
           loop: 1
         },
         events: {
-          onReady: function(e) { e.target.playVideo(); setPlayPauseIcon(true); },
+          onReady: function(e) {
+            var savedTime = getSavedPosition(videoId);
+            if (savedTime > 5) {
+              e.target.seekTo(savedTime, true);
+            }
+            e.target.playVideo();
+            setPlayPauseIcon(true);
+
+            if (saveInterval) clearInterval(saveInterval);
+            saveInterval = setInterval(function() {
+              if (player && player.getCurrentTime) {
+                savePosition(videoId, player.getCurrentTime());
+              }
+            }, 3000);
+          },
           onStateChange: function(e) {
             if (e.data === YT.PlayerState.PLAYING) setPlayPauseIcon(true);
-            if (e.data === YT.PlayerState.PAUSED) setPlayPauseIcon(false);
+            if (e.data === YT.PlayerState.PAUSED) {
+              setPlayPauseIcon(false);
+              if (player && player.getCurrentTime && currentVideoId) {
+                savePosition(currentVideoId, player.getCurrentTime());
+              }
+            }
           },
           onError: function() { document.getElementById('errorMsg').style.display = 'flex'; }
         }
@@ -269,6 +309,10 @@
   }
 
   function destroyPlayer() {
+    if (saveInterval) { clearInterval(saveInterval); saveInterval = null; }
+    if (player && player.getCurrentTime && currentVideoId) {
+      savePosition(currentVideoId, player.getCurrentTime());
+    }
     if (player && player.destroy) player.destroy();
     player = null;
     document.getElementById('playerHost').innerHTML = '';
@@ -287,11 +331,6 @@
   document.getElementById('homeFromPlayer').addEventListener('click', function() {
     destroyPlayer();
     showScreen('screenGenres');
-  });
-
-  document.getElementById('backToGridBtn').addEventListener('click', function() {
-    destroyPlayer();
-    openGenre(currentGenre);
   });
 
   document.getElementById('playPauseBtn').addEventListener('click', function() {
